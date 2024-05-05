@@ -10,6 +10,40 @@ base {
     archivesName = project.archives_base_name
 }
 
+loom {
+    splitEnvironmentSourceSets()
+    accessWidenerPath = file("src/main/resources/fake_world.accesswidener")
+    decompilers {
+        vineflower {
+            options.put("bsm", "1")
+        }
+    }
+}
+
+sourceSets {
+    testmod {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+    }
+
+    testmodClient {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+        compileClasspath += client.compileClasspath
+        runtimeClasspath += client.runtimeClasspath
+
+        compileClasspath += testmod.compileClasspath
+        runtimeClasspath += testmod.runtimeClasspath
+    }
+}
+
+allprojects.each { p ->
+    loom.mods.register(p.name) {
+        sourceSet p.sourceSets.main
+        sourceSet p.sourceSets.client
+    }
+}
+
 repositories {
     // Add repositories to retrieve artifacts from in here.
     // You should only use this when depending on other mods because
@@ -26,6 +60,11 @@ dependencies {
 
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    testmodImplementation sourceSets.main.output
+    testmodClientImplementation sourceSets.testmod.output
+    testmodClientImplementation sourceSets.main.output
+    testmodClientImplementation sourceSets.client.output
 }
 
 processResources {
@@ -66,7 +105,7 @@ java {
 
 jar {
     from("LICENSE") {
-        rename { "${it}_${project.archivesBaseName}"}
+        rename { "${it}_${project.archivesBaseName}" }
     }
 }
 
@@ -81,9 +120,6 @@ publishing {
 
     // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
     repositories {
-        // Add repositories to publish to here.
-        // Notice: This block does NOT have the same function as the block in the top level.
-        // The repositories here will be used for publishing your artifact, not for
-        // retrieving dependencies.
+        mavenLocal()
     }
 }
