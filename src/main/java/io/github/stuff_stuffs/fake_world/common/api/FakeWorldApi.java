@@ -68,6 +68,7 @@ public final class FakeWorldApi {
         final PlayerManager manager = entity.getServer().getPlayerManager();
         manager.sendWorldInfo(entity, entity.getServerWorld());
         manager.sendCommandTree(entity);
+        entity.changeGameMode(((ServerPlayerExtensions) entity).fake_world$prevGameMode());
         LEAVE_EVENT.invoker().onLeave(entity, data);
     }
 
